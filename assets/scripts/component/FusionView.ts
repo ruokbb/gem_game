@@ -19,8 +19,11 @@ export class FusionView extends Component {
     selectPageViewNode: Node | undefined
 
     private haveSelectMain = false
-    private selectCowIndex = "1"
-    private selectCowLevel = ""
+    private selectCowIndex = "1" //当前选择的槽位序号
+    private selectedCowIndexList: string[] = [] // 已选择的槽位序号
+    private selectedGemIndexList: number[] = [] // 对应槽位选择的宝石序号
+    private selectCowLevel = "" // 1号槽等级
+
 
     /**
      * 点击强化槽
@@ -80,11 +83,21 @@ export class FusionView extends Component {
         this.haveSelectMain = true
 
         // 记录当前选中的宝石数据
-        selectGemApi(gemIndex, gemLevel)
-        this.updateFusionGemSelect() // 更新可选宝石数据展示
+        this.selectedGemIndexList.push(gemIndex)
+        this.selectedCowIndexList.push(this.selectCowIndex)
+        selectGemApi(gemIndex, gemLevel) // 选择宝石，更新可选宝石数据
+        this.updateFusionGemSelect() // 更新可选宝石展示
     }
 
+    /**
+     * 贴图复原， 已选数据清空
+     * @param resetAll
+     */
     resetCowSprite(resetAll=true){
+        // 清空已选数据
+        console.log(`已选宝石：${this.selectedGemIndexList}，已选槽位：${this.selectedCowIndexList}`)
+        this.selectedCowIndexList = []
+        this.selectedGemIndexList = []
         // 贴图复原
         this.node.getChildByName("cowList")?.children.forEach(value => {
             if (!resetAll && value.name === "cowItem1"){
@@ -128,6 +141,17 @@ export class FusionView extends Component {
      */
    updateFusionGemSelect(){
        this.GemsSelectViewNode!.getChildByName("GemSelectView")!.getComponent(FusionGemSelect)!.updatePackageGems()
+   }
+
+   clickFusionButton(){
+       // 判断是否选择完
+       if (this.selectedCowIndexList.length < 5){
+           // todo 提示
+           return
+       }
+       // 把结果展示展示页拉到中间，滚动展示
+
+
    }
 
 }

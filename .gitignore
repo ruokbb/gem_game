@@ -5,7 +5,6 @@ dist
 # Cocos Creator 3D Project
 #///////////////////////////
 library/
-temp/
 local/
 build/
 profiles/

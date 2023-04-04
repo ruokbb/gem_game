@@ -65,3 +65,20 @@ export function getLevelGemsData(level: GemLevelType){
 export function saveLevelGemsData(level: GemLevelType, GemsData: number[]){
     sys.localStorage.setItem(level, JSON.stringify(GemsData))
 }
+
+/**
+ * 获取随机数
+ */
+// @ts-ignore
+export const rand = (function(){
+    var today = new Date();
+    var seed = today.getTime();
+    function rnd(){
+        seed = ( seed * 9301 + 49297 ) % 233280;
+        return seed / ( 233280.0 );
+    };
+    return function rand(number_: number){
+        // return Math.ceil(rnd(seed) * number);
+        return Math.ceil(rnd() * number_);
+    };
+})();

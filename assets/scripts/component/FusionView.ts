@@ -1,7 +1,8 @@
 import {_decorator, Component, Label, Node, Vec3, PageView, resources, SpriteFrame, Sprite} from 'cc';
 import {GemLevelType, GemsNumber} from "../Common";
-import {clearSelectedGemsDataApi, selectGemApi} from "../api/FusionApi";
+import {clearSelectedGemsDataApi, selectGemApi, fusionGemApi} from "../api/FusionApi";
 import {FusionGemSelect} from "./Fusion/FusionGemSelect";
+import {ResultShow} from "./Fusion/ResultShow";
 
 const { ccclass, property } = _decorator;
 
@@ -13,16 +14,22 @@ export class FusionView extends Component {
     GemsSelectViewNode: Node | undefined
 
     @property({type:SpriteFrame})
-    cowDefaultSpriteFrame: SpriteFrame | undefined
+    cowDefaultSpriteFrame: SpriteFrame | undefined // 空槽位贴图
 
     @property({type: Node})
     selectPageViewNode: Node | undefined
+
+    @property({type: Node})
+    resultShowViewNode: Node | undefined // 结果展示页
+
+    @property({type: Number, range: [0,5,0.1], slide:true, displayName:"变化时间(s)"})
+    private showChangeTime = 0
 
     private haveSelectMain = false
     private selectCowIndex = "1" //当前选择的槽位序号
     private selectedCowIndexList: string[] = [] // 已选择的槽位序号
     private selectedGemIndexList: number[] = [] // 对应槽位选择的宝石序号
-    private selectCowLevel = "" // 1号槽等级
+    private selectCowLevel: GemLevelType = "" // 1号槽等级
 
 
     /**
@@ -145,13 +152,17 @@ export class FusionView extends Component {
 
    clickFusionButton(){
        // 判断是否选择完
-       if (this.selectedCowIndexList.length < 5){
+       if (this.selectedCowIndexList.length < 2){
            // todo 提示
            return
        }
+       // 调接口获取合成结果
+       const result = fusionGemApi(this.selectedCowIndexList, this.selectedGemIndexList, this.selectCowLevel)
+       const cowIndexString = this.selectedCowIndexList[result[1] as number]
+
        // 把结果展示展示页拉到中间，滚动展示
-
-
+       this.resultShowViewNode!.position = new Vec3(0,0,0)
+       this.resultShowViewNode!.getComponent(ResultShow)!.startShow(this.showChangeTime, result[0] as boolean , cowIndexString)
    }
 
 }

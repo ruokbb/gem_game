@@ -1,19 +1,6 @@
 import {GemsNumber, DrawCardResultType, GemLevelType, GemsPoolOdds, GemsPoolExpenses} from "../Common";
-import {changePlayerCoin, getLevelGemsData, getPlayerCoin, saveLevelGemsData} from "./util";
+import {changePlayerCoin, getLevelGemsData, rand, saveLevelGemsData} from "./util";
 
-// @ts-ignore
-const rand = (function(){
-    var today = new Date();
-    var seed = today.getTime();
-    function rnd(){
-        seed = ( seed * 9301 + 49297 ) % 233280;
-        return seed / ( 233280.0 );
-    };
-    return function rand(number_: number){
-        // return Math.ceil(rnd(seed) * number);
-        return Math.ceil(rnd() * number_);
-    };
-})();
 
 /**
  * 抽卡api

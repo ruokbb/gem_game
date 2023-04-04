@@ -7,3 +7,5 @@ export const dataKey = {
     LAST_GAIN_TIME: "lastGainTimeString"
 
 }
+
+export const fusionProbability = [4, 8, 16, 32]

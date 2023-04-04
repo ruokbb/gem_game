@@ -1,6 +1,7 @@
 import {GemLevelType, GemsLevel} from "../Common";
-import {getLevelGemsData} from "./util";
+import {getLevelGemsData, rand, saveLevelGemsData} from "./util";
 import {dataKey} from "./common";
+import {fusionProbability} from "./common";
 
 let selectedGemsLevel: GemLevelType = GemsLevel.SSR as GemLevelType
 let selectedGemsIndex: number[]  = []
@@ -37,10 +38,42 @@ export function getFusionGemsDataApi(){
     return PlayerGemsData
 }
 
+/**
+ * 选择宝石
+ * @param gemIndex
+ * @param gemLevel
+ */
 export function selectGemApi(gemIndex: number, gemLevel: GemLevelType) {
     selectedGemsIndex.push(gemIndex)
     selectedGemsLevel = gemLevel
 }
+
+/**
+ * 合成宝石
+ * @param cowIndexList
+ * @param gemIndexList
+ * @param gemLevel
+ */
+export function fusionGemApi(cowIndexList: string[], gemIndexList: number[], gemLevel: GemLevelType){
+    // 判断合成是否成功
+    const probability = fusionProbability[cowIndexList.length - 1]
+    let fusionSuccess = false
+    if (rand(100) < probability){
+        fusionSuccess = true
+    }
+    const finalIndex = rand(cowIndexList.length - 1)
+
+    // 保存到数据库
+    if (fusionSuccess){
+        const gemsData: number[] = getLevelGemsData(gemLevel)
+        gemsData[gemIndexList[finalIndex]] += 1
+        saveLevelGemsData(gemLevel, gemsData)
+    }
+
+    return [fusionSuccess, finalIndex]
+
+}
+
 
 export function clearSelectedGemsDataApi(){
     selectedGemsIndex = []

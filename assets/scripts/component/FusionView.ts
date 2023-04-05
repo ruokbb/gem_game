@@ -22,8 +22,6 @@ export class FusionView extends Component {
     @property({type: Node})
     resultShowViewNode: Node | undefined // 结果展示页
 
-    @property({type: Number, range: [0,5,0.1], slide:true, displayName:"变化时间(s)"})
-    private showChangeTime = 0
 
     private haveSelectMain = false
     private selectCowIndex = "1" //当前选择的槽位序号
@@ -162,7 +160,7 @@ export class FusionView extends Component {
 
        // 把结果展示展示页拉到中间，滚动展示
        this.resultShowViewNode!.position = new Vec3(0,0,0)
-       this.resultShowViewNode!.getComponent(ResultShow)!.startShow(this.showChangeTime, result[0] as boolean , cowIndexString)
+       this.resultShowViewNode!.getComponent(ResultShow)!.startShow(result[0] as boolean , cowIndexString)
    }
 
 }

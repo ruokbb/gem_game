@@ -1,4 +1,4 @@
-import {_decorator, Component, Vec3} from 'cc';
+import {_decorator, Component, Vec3, tween} from 'cc';
 
 const { ccclass, property } = _decorator;
 
@@ -10,24 +10,25 @@ export class ResultShow extends  Component{
     private fusionSuccess = false
     private finalCowIndexString = "1"
 
+    @property({type: Number, range: [0,5,0.1], slide:true, displayName:"变化时间(s)"})
+    private showChangeTime = 0
+
+    @property({type:Number, range: [50, 200, 1], slide:true, displayName: "滚动次数"})
+    private scrollTimes = 100
+
     private focusCowIndex = "1"
+
+    scrollObj = {
+        value: 0
+    }
 
 
     /**
      * 按顺序滚动选择，先快后慢，最后停到随机到的位置
      */
-    showTween(){
+    showTween(index: number){
         const cowItemShow = this.node.getChildByName("fusion")!.getChildByName(`cowItem${this.focusCowIndex}`)!
         // todo 选中的外框发光
-
-        // index 递增
-        let focusIndex: number = parseInt(this.focusCowIndex)
-        focusIndex += 1
-        if (focusIndex > 5){
-            this.focusCowIndex = "1"
-        }else {
-            this.focusCowIndex = `${focusIndex}`
-        }
 
     }
 
@@ -41,11 +42,20 @@ export class ResultShow extends  Component{
     /**
      * 开始展示
      */
-    startShow(showChangeTime: number, fusionSuccess: boolean, finalCowIndexString: string){
+    startShow(fusionSuccess: boolean, finalCowIndexString: string){
         this.showTag = true
         this.fusionSuccess = fusionSuccess
         this.finalCowIndexString = finalCowIndexString
-        this.scheduleOnce(this.showFinalResult, showChangeTime)
+
+        tween(this.scrollObj).to(
+            this.showChangeTime, {value: this.scrollTimes}, {
+                easing: "quadInOut",
+                // @ts-ignore
+                onUpdate: (target: {value: number}, ratio) => {
+                    this.showTween(Math.floor(target.value))
+                }
+            }
+        )
     }
 
     /**

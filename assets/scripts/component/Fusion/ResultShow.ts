@@ -1,4 +1,5 @@
-import {_decorator, Component,Sprite, color, Vec3, tween, Node} from 'cc';
+import {_decorator, Component,Sprite, color, Color, Vec3, tween, Node, Tween} from 'cc';
+import {fastRemove} from "../../../../../../../../Applications/CocosCreator/Creator/3.6.3/CocosCreator.app/Contents/Resources/resources/3d/engine/cocos/core/utils/array";
 
 const { ccclass, property } = _decorator;
 
@@ -6,7 +7,9 @@ const { ccclass, property } = _decorator;
 // @ts-ignore
 export class ResultShow extends  Component{
 
-    private showTag = false
+    private scrollingTag = false // 判断跑灯是否结束
+    private fusionSuccessFlash = false // 合成成功控制发光
+
     private fusionSuccess = false
     private finalCowIndexString = "1"
 
@@ -22,15 +25,41 @@ export class ResultShow extends  Component{
     @property({type: Number, range: [0, 255, 1], displayName: "滚动残影透明度"})
     private selectedLastAlpha = 0
 
+    @property({type: Color, displayName: "合成成功彩虹色"})
+    private fusionSuccessColorList: Color[] = []
 
     @property({type: Node, displayName: "槽位节点列表"})
     private cowList: Node[] = []
 
+
+    private colorUpdateTimes = 0
+    @property({type: Number, range: [1, 60, 1], slide: true, displayName: "变化间隔(帧)"})
+    private colorChangeInterval = 1
+
+    @property({type: Number, range: [0,5,0.1], slide:true, displayName:"变化时间(s)"})
+    private colorChangeTime = 0
+
     private startScroll = false
+    private scrollTween: Tween<any> | undefined
 
 
     scrollObj = {
         value: 0
+    }
+
+    protected update(dt: number) {
+        if (!this.fusionSuccessFlash) return
+
+        // 闪光
+        const cowNode = this.cowList[parseInt(this.finalCowIndexString) - 1]
+        this.colorUpdateTimes += 1
+        if (this.colorUpdateTimes > this.colorChangeInterval){
+            this.colorUpdateTimes = 0
+            // 变换颜色
+
+        }
+
+
     }
 
 
@@ -61,17 +90,39 @@ export class ResultShow extends  Component{
     }
 
     /**
-     * 直接展示最终结果展示
+     * 最终结果展示
      */
     showFinalResult(){
-        this.showTag = false
+        this.scrollingTag = false
+        this.fusionSuccessFlash = false
+        // 跑灯停留
+        const cowName = `cowItem${this.finalCowIndexString}`
+        this.cowList.forEach(((value, index1) => {
+            const resSpriteMask = value.getChildByName("Sprite")!.getComponent(Sprite)
+            if (value.name == cowName){
+                resSpriteMask!.color = color(255, 0,0, this.selectedAlpha)
+            }else {
+                resSpriteMask!.color = color(255, 0,0, 0)
+            }
+        }))
+        // 判断是否成功
+        if (this.fusionSuccess){
+            // 触发update 遮照发光
+            // 显示升级后等级打包
+            this.fusionSuccessFlash = true
+        } else {
+            // todo 遮照全部变灰
+
+
+        }
     }
 
     /**
      * 开始展示
      */
     startShow(fusionSuccess: boolean, finalCowIndexString: string){
-        this.showTag = true
+        this.scrollingTag = true
+        this.fusionSuccessFlash = false
         this.startScroll = true
 
         this.fusionSuccess = fusionSuccess
@@ -79,7 +130,7 @@ export class ResultShow extends  Component{
 
         const finalScrollTimes = this.scrollTimes + parseInt(this.finalCowIndexString) - 1 - (this.scrollTimes % this.cowList.length)
 
-        tween(this.scrollObj).to(
+        this.scrollTween = tween(this.scrollObj).to(
             this.showChangeTime, {value: finalScrollTimes}, {
                 easing: "quadInOut",
                 // @ts-ignore
@@ -87,23 +138,26 @@ export class ResultShow extends  Component{
                     this.showTween(Math.floor(target.value))
                 }
             }
-        )
+        ).call(()=>{
+            this.showFinalResult()
+        })
+        this.scrollTween.start()
     }
 
     /**
      * 点击蒙版
      */
     drawFinishCallback(){
-        if (this.showTag){
+        if (this.scrollingTag){
             // 结束滚动
-            this.unscheduleAllCallbacks()
+            this.scrollTween!.stop()
             this.showFinalResult()
         }else {
             // 关闭界面
             this.node.position = new Vec3(0 ,1300, 0)
+            this.fusionSuccessFlash = false
         }
     }
-
 }
 
 

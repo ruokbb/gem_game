@@ -1,4 +1,4 @@
-import {_decorator, Component, Vec3, tween} from 'cc';
+import {_decorator, Component,Sprite, color, Vec3, tween, Node} from 'cc';
 
 const { ccclass, property } = _decorator;
 
@@ -16,7 +16,18 @@ export class ResultShow extends  Component{
     @property({type:Number, range: [50, 200, 1], slide:true, displayName: "滚动次数"})
     private scrollTimes = 100
 
-    private focusCowIndex = "1"
+    @property({type: Number,range: [0, 255, 1], displayName: "滚动选中透明度"})
+    private selectedAlpha = 0
+
+    @property({type: Number, range: [0, 255, 1], displayName: "滚动残影透明度"})
+    private selectedLastAlpha = 0
+
+
+    @property({type: Node, displayName: "槽位节点列表"})
+    private cowList: Node[] = []
+
+    private startScroll = false
+
 
     scrollObj = {
         value: 0
@@ -24,12 +35,29 @@ export class ResultShow extends  Component{
 
 
     /**
-     * 按顺序滚动选择，先快后慢，最后停到随机到的位置
+     * 按顺序滚动选择，先快后慢
      */
     showTween(index: number){
-        const cowItemShow = this.node.getChildByName("fusion")!.getChildByName(`cowItem${this.focusCowIndex}`)!
-        // todo 选中的外框发光
+        const cowIndex = index % this.cowList.length + 1
+        let cowLastIndex = cowIndex - 1
+        if (cowLastIndex<=0) cowLastIndex = 5
+        const cowName = `cowItem${cowIndex}`
+        const cowLastName = `cowItem${cowLastIndex}`
+        this.cowList.forEach(((value, index1) => {
+            const resSpriteMask = value.getChildByName("Sprite")!.getComponent(Sprite)
+            if (value.name == cowName){
+                resSpriteMask!.color = color(255, 0,0, this.selectedAlpha)
 
+            }else if (value.name == cowLastName){
+                if (this.startScroll){
+                    this.startScroll = false
+                }else {
+                    resSpriteMask!.color = color(255, 0,0, this.selectedLastAlpha)
+                }
+            }else {
+                resSpriteMask!.color = color(255, 0,0, 0)
+            }
+        }))
     }
 
     /**
@@ -44,11 +72,15 @@ export class ResultShow extends  Component{
      */
     startShow(fusionSuccess: boolean, finalCowIndexString: string){
         this.showTag = true
+        this.startScroll = true
+
         this.fusionSuccess = fusionSuccess
-        this.finalCowIndexString = finalCowIndexString
+        this.finalCowIndexString = finalCowIndexString // "12345"
+
+        const finalScrollTimes = this.scrollTimes + parseInt(this.finalCowIndexString) - 1 - (this.scrollTimes % this.cowList.length)
 
         tween(this.scrollObj).to(
-            this.showChangeTime, {value: this.scrollTimes}, {
+            this.showChangeTime, {value: finalScrollTimes}, {
                 easing: "quadInOut",
                 // @ts-ignore
                 onUpdate: (target: {value: number}, ratio) => {

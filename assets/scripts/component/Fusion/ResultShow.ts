@@ -1,5 +1,4 @@
-import {_decorator, Component,Sprite, color, Color, Vec3, tween, Node, Tween} from 'cc';
-import {fastRemove} from "../../../../../../../../Applications/CocosCreator/Creator/3.6.3/CocosCreator.app/Contents/Resources/resources/3d/engine/cocos/core/utils/array";
+import {_decorator, color, Color, Component, Node, Sprite, tween, Tween, Vec3} from 'cc';
 
 const { ccclass, property } = _decorator;
 
@@ -13,10 +12,10 @@ export class ResultShow extends  Component{
     private fusionSuccess = false
     private finalCowIndexString = "1"
 
-    @property({type: Number, range: [0,5,0.1], slide:true, displayName:"变化时间(s)"})
+    @property({type: Number, range: [0,5,0.1], slide:true, displayName:"滚动时间(s)"})
     private showChangeTime = 0
 
-    @property({type:Number, range: [50, 200, 1], slide:true, displayName: "滚动次数"})
+    @property({type:Number, range: [0, 100, 1], slide:true, displayName: "滚动次数"})
     private scrollTimes = 100
 
     @property({type: Number,range: [0, 255, 1], displayName: "滚动选中透明度"})
@@ -56,10 +55,8 @@ export class ResultShow extends  Component{
         if (this.colorUpdateTimes > this.colorChangeInterval){
             this.colorUpdateTimes = 0
             // 变换颜色
-
+            cowNode.getChildByName("Sprite")!.getComponent(Sprite)!.color = this.fusionSuccessColorList[this.colorUpdateTimes % this.fusionSuccessColorList.length]
         }
-
-
     }
 
 
@@ -67,22 +64,14 @@ export class ResultShow extends  Component{
      * 按顺序滚动选择，先快后慢
      */
     showTween(index: number){
-        const cowIndex = index % this.cowList.length + 1
-        let cowLastIndex = cowIndex - 1
-        if (cowLastIndex<=0) cowLastIndex = 5
+        let cowIndex = index % this.cowList.length + 1
+        if (cowIndex == 1) cowIndex += 1
+
         const cowName = `cowItem${cowIndex}`
-        const cowLastName = `cowItem${cowLastIndex}`
-        this.cowList.forEach(((value, index1) => {
+        this.cowList.forEach(((value) => {
             const resSpriteMask = value.getChildByName("Sprite")!.getComponent(Sprite)
             if (value.name == cowName){
                 resSpriteMask!.color = color(255, 0,0, this.selectedAlpha)
-
-            }else if (value.name == cowLastName){
-                if (this.startScroll){
-                    this.startScroll = false
-                }else {
-                    resSpriteMask!.color = color(255, 0,0, this.selectedLastAlpha)
-                }
             }else {
                 resSpriteMask!.color = color(255, 0,0, 0)
             }
@@ -93,6 +82,7 @@ export class ResultShow extends  Component{
      * 最终结果展示
      */
     showFinalResult(){
+        console.log("跑灯结束")
         this.scrollingTag = false
         this.fusionSuccessFlash = false
         // 跑灯停留
@@ -106,14 +96,13 @@ export class ResultShow extends  Component{
             }
         }))
         // 判断是否成功
+        // todo 闪，音乐，成功图标、失败变灰
         if (this.fusionSuccess){
             // 触发update 遮照发光
             // 显示升级后等级打包
             this.fusionSuccessFlash = true
         } else {
-            // todo 遮照全部变灰
-
-
+            this.resultShowCowMaskChange(new Color(144,144,144, 120))
         }
     }
 
@@ -121,6 +110,7 @@ export class ResultShow extends  Component{
      * 开始展示
      */
     startShow(fusionSuccess: boolean, finalCowIndexString: string){
+        console.log(`宝石：${finalCowIndexString}, 合成结果：${fusionSuccess}`)
         this.scrollingTag = true
         this.fusionSuccessFlash = false
         this.startScroll = true
@@ -129,6 +119,7 @@ export class ResultShow extends  Component{
         this.finalCowIndexString = finalCowIndexString // "12345"
 
         const finalScrollTimes = this.scrollTimes + parseInt(this.finalCowIndexString) - 1 - (this.scrollTimes % this.cowList.length)
+        this.scrollObj.value = 0
 
         this.scrollTween = tween(this.scrollObj).to(
             this.showChangeTime, {value: finalScrollTimes}, {
@@ -147,7 +138,7 @@ export class ResultShow extends  Component{
     /**
      * 点击蒙版
      */
-    drawFinishCallback(){
+    scrollFinishCallback(){
         if (this.scrollingTag){
             // 结束滚动
             this.scrollTween!.stop()
@@ -156,7 +147,19 @@ export class ResultShow extends  Component{
             // 关闭界面
             this.node.position = new Vec3(0 ,1300, 0)
             this.fusionSuccessFlash = false
+            this.resultShowCowMaskChange(new Color(255, 0, 0, 0))
         }
+    }
+
+    /**
+     *  控制全部的展示槽颜色变化
+     * @param maskColor
+     */
+    resultShowCowMaskChange(maskColor: Color){
+        this.cowList.forEach((value: Node) => {
+            const maskSprite = value.getChildByName("Sprite")!.getComponent(Sprite)
+            maskSprite!.color =  maskColor
+        })
     }
 }
 

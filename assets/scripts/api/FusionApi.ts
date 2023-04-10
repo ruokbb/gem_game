@@ -56,12 +56,14 @@ export function selectGemApi(gemIndex: number, gemLevel: GemLevelType) {
  */
 export function fusionGemApi(cowIndexList: string[], gemIndexList: number[], gemLevel: GemLevelType){
     // 判断合成是否成功
-    const probability = fusionProbability[cowIndexList.length - 1]
+    const probability = fusionProbability[cowIndexList.length - 2]
     let fusionSuccess = false
     if (rand(100) < probability){
         fusionSuccess = true
     }
     const finalIndex = rand(cowIndexList.length - 1)
+
+    // todo 清空合成的宝石数据
 
     // 保存到数据库
     if (fusionSuccess){

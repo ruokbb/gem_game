@@ -63,9 +63,14 @@ export function fusionGemApi(cowIndexList: string[], gemIndexList: number[], gem
     }
     const finalIndex = rand(cowIndexList.length - 1)
 
-    // todo 清空合成的宝石数据
+    // 丢弃合成宝石
+    const gemsData = getLevelGemsData(gemLevel)
+    gemIndexList.forEach(value => {
+        gemsData[value] -= 1
+    })
+    saveLevelGemsData(gemLevel, gemsData)
 
-    // 保存到数据库
+    // 合成成功，保存到数据库
     if (fusionSuccess){
         const gemsData: number[] = getLevelGemsData(gemLevel)
         gemsData[gemIndexList[finalIndex]] += 1

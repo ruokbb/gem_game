@@ -1,5 +1,9 @@
 import PopupBase from "./component/popups/PopupBase";
 import {_decorator,resources, Node,instantiate,Canvas,macro,  Prefab, isValid, warn} from 'cc'
+import {
+    find
+} from "../../../../../CocosDashboard/resources/.editors/Creator/3.6.3/resources/resources/3d/engine/cocos/core";
+import {Game} from "./Game";
 const { ccclass, property } = _decorator;
 
 /** 弹窗缓存模式 */
@@ -162,10 +166,10 @@ export default class PopupManager {
             this._current.popup = popup;
             // 保存节点引用
             this._current.node = node;
-            // todo 添加到场景中
-            node.setParent(this.container || Canvas.instance.node);
-            // todo 显示在最上层
-            node.setSiblingIndex(macro.MAX_ZINDEX);
+            // 添加到场景中
+            node.setParent(this.container || find("Canvas"));
+            // 显示在最上层
+            node.setSiblingIndex(1);
             // 设置完成回调
             const finishCallback = async (suspended: boolean) => {
                 if (suspended) {
@@ -181,7 +185,7 @@ export default class PopupManager {
                 res(ShowResult.Done);
                 // todo 延迟一会儿
                 await new Promise(_res => {
-                    Canvas.instance.scheduleOnce(_res, this.interval);
+                    find("Canvas")!.getComponent(Game)!.scheduleOnce(_res, this.interval);
                 });
                 // 下一个弹窗
                 this.next();
@@ -364,8 +368,9 @@ export default class PopupManager {
                 }
             }
             //todo 动态加载
-            resources.load(path, (error: Error, prefab: Prefab) => {
+            resources.load(path, Prefab, (error, prefab) => {
                 if (error) {
+                    // @ts-ignore
                     res(null);
                     return;
                 }

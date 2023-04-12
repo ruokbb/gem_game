@@ -81,6 +81,7 @@ export default class PopupBase<Options = any> extends Component {
                 if (!blocker) {
                     blocker = this.blocker = new Node('blocker');
                     blocker.addComponent(BlockInputEvents);
+                    blocker.addComponent(UITransform);
                     blocker.setParent(node);
                     blocker.getComponent(UITransform)!.contentSize = node.getComponent(UITransform)!.contentSize
                 }

@@ -1,8 +1,5 @@
 import PopupBase from "./component/popups/PopupBase";
-import {_decorator,resources, Node,instantiate,Canvas,macro,  Prefab, isValid, warn} from 'cc'
-import {
-    find
-} from "../../../../../CocosDashboard/resources/.editors/Creator/3.6.3/resources/resources/3d/engine/cocos/core";
+import {_decorator,find, resources, Node,instantiate,Canvas,macro,  Prefab, isValid, warn} from 'cc'
 import {Game} from "./Game";
 const { ccclass, property } = _decorator;
 

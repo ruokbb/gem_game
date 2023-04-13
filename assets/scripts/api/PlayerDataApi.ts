@@ -24,12 +24,18 @@ export function getPlayerGemsDataApi(){
     return PlayerGemsData
 }
 
+/**
+ * 获取上次计算收益时间
+ */
+export function getLastCalTime(){
+    return sys.localStorage.getItem(dataKey.LAST_GAIN_TIME)
+}
 
 /**
- * 计算收益
+ * 最终金币数
  */
 export function calPlayerGainApi(){
-    const lastCalTimeString = sys.localStorage.getItem(dataKey.LAST_GAIN_TIME)
+    const lastCalTimeString = getLastCalTime()
     let lastCalTime: Date
     const nowTime: Date = new Date()
     sys.localStorage.setItem(dataKey.LAST_GAIN_TIME, JSON.stringify(nowTime.getTime()))
@@ -37,7 +43,7 @@ export function calPlayerGainApi(){
         lastCalTime = new Date(Number(lastCalTimeString))
     }else {
         // 第一次计算收益
-        return getPlayerCoin()
+        return [getPlayerCoin(), 0]
     }
     const interval = Math.floor(nowTime.getTime() / 1000 - lastCalTime.getTime() / 1000)
 
@@ -57,6 +63,6 @@ export function calPlayerGainApi(){
     gemsSecondGain.forEach(value => {
         totalGain += value
     })
-    return changePlayerCoin(totalGain * interval)
+    return [changePlayerCoin(totalGain * interval), totalGain * interval]
 
 }

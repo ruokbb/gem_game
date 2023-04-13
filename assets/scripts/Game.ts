@@ -2,7 +2,9 @@ import {_decorator, Component, resources, SpriteFrame, Sprite, find, Label, Node
 const { ccclass, property } = _decorator;
 import {initialize} from "./Initialize";
 import {GemsNumber, GemsLevel,LevelGain, GlobalEventTarget, GlobalEventType} from "./Common";
-import {calPlayerGainApi, getPlayerCoinApi, getPlayerGemsDataApi} from "./api/PlayerDataApi";
+import {calPlayerGainApi, getLastCalTime, getPlayerCoinApi, getPlayerGemsDataApi} from "./api/PlayerDataApi";
+import {GainsPopup, GainsPopupOptions} from "./component/popups/GainsPopup";
+import PopupManager from "./PopupManager";
 
 
 @ccclass('Game')
@@ -27,8 +29,8 @@ export class Game extends Component {
         this.updateCoinShow(-1)
         // 初始计算等级展示
         this.updateLevelShow()
-        // 计算挂机收益
-        this.calGain()
+        // todo 弹窗展示计算挂机收益
+        this.calGain(true)
 
         //启动金币收益变化展示
         this.schedule(()=> {
@@ -76,8 +78,16 @@ export class Game extends Component {
 
     }
 
-    calGain(){
-        const playCoin = calPlayerGainApi()
+    calGain(showPopup = false){
+        const result = calPlayerGainApi()
+        if (showPopup){
+            const options: GainsPopupOptions = {
+                lastLoginTime: getLastCalTime() as string ,
+                gainCoinNumber: result[1] as number
+            }
+            PopupManager.show(GainsPopup.path, options)
+        }
+        const playCoin = result[0]
         this.updateCoinShow(playCoin)
     }
 

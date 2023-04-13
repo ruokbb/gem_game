@@ -39,7 +39,6 @@ export class GainsPopup extends PopupBase<GainsPopupOptions>{
 export interface GainsPopupOptions {
     lastLoginTime: string
     gainCoinNumber: int
-
 }
 
 

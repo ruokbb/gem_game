@@ -1,10 +1,11 @@
-import {_decorator, Component, resources, SpriteFrame, Sprite, find, Label, Node} from 'cc';
-const { ccclass, property } = _decorator;
+import {_decorator, Component, find, Label, Node, resources, Sprite, SpriteFrame} from 'cc';
 import {initialize} from "./Initialize";
-import {GemsNumber, GemsLevel,LevelGain, GlobalEventTarget, GlobalEventType} from "./Common";
+import {GemsLevel, GemsNumber, GlobalEventTarget, GlobalEventType, LevelGain} from "./Common";
 import {calPlayerGainApi, getLastCalTime, getPlayerCoinApi, getPlayerGemsDataApi} from "./api/PlayerDataApi";
 import {GainsPopup, GainsPopupOptions} from "./component/popups/GainsPopup";
-import PopupManager from "./PopupManager";
+import PopupManager, {PopupCacheMode, PopupParamsType} from "./PopupManager";
+
+const { ccclass, property } = _decorator;
 
 
 @ccclass('Game')
@@ -29,7 +30,7 @@ export class Game extends Component {
         this.updateCoinShow(-1)
         // 初始计算等级展示
         this.updateLevelShow()
-        // todo 弹窗展示计算挂机收益
+        // 弹窗展示计算挂机收益
         this.calGain(true)
 
         //启动金币收益变化展示
@@ -85,7 +86,10 @@ export class Game extends Component {
                 lastLoginTime: getLastCalTime() as string ,
                 gainCoinNumber: result[1] as number
             }
-            PopupManager.show(GainsPopup.path, options)
+            const params : PopupParamsType = {
+                mode : PopupCacheMode.Once
+            }
+            PopupManager.show(GainsPopup.path, options, params)
         }
         const playCoin = result[0]
         this.updateCoinShow(playCoin)

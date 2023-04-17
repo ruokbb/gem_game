@@ -4,7 +4,7 @@ import {Game} from "./Game";
 const { ccclass, property } = _decorator;
 
 /** 弹窗缓存模式 */
-enum CacheMode {
+export enum PopupCacheMode {
     /** 一次性的（立即销毁节点，预制体资源随即释放） */
     Once = 1,
     /** 正常的（立即销毁节点，但是缓存预制体资源） */
@@ -61,7 +61,7 @@ export default class PopupManager {
 
     /** 弹窗缓存模式 */
     public static get CacheMode() {
-        return CacheMode;
+        return PopupCacheMode;
     }
 
     /** 弹窗请求结果类型 */
@@ -180,7 +180,7 @@ export default class PopupManager {
                 // @ts-ignore
                 this._current = null;
                 res(ShowResult.Done);
-                // todo 延迟一会儿
+                // 延迟一会儿
                 await new Promise(_res => {
                     find("Canvas")!.getComponent(Game)!.scheduleOnce(_res, this.interval);
                 });
@@ -319,10 +319,10 @@ export default class PopupManager {
      * @param node 弹窗节点
      * @param mode 缓存模式
      */
-    private static recycle(path: string, node: Node, mode: CacheMode) {
+    private static recycle(path: string, node: Node, mode: PopupCacheMode) {
         switch (mode) {
             // 一次性
-            case CacheMode.Once: {
+            case PopupCacheMode.Once: {
                 this._nodeCache.delete(path);
                 node.destroy();
                 // 释放
@@ -330,13 +330,13 @@ export default class PopupManager {
                 break;
             }
             // 正常
-            case CacheMode.Normal: {
+            case PopupCacheMode.Normal: {
                 this._nodeCache.delete(path);
                 node.destroy();
                 break;
             }
             // 频繁
-            case CacheMode.Frequent: {
+            case PopupCacheMode.Frequent: {
                 node.removeFromParent();
                 this._nodeCache.set(path, node);
                 break;
@@ -364,7 +364,7 @@ export default class PopupManager {
                     prefabMap.delete(path);
                 }
             }
-            //todo 动态加载
+            //动态加载
             resources.load(path, Prefab, (error, prefab) => {
                 if (error) {
                     // @ts-ignore
@@ -423,7 +423,7 @@ export default class PopupManager {
         }
         // 缓存模式
         if (params.mode == undefined) {
-            params.mode = CacheMode.Normal;
+            params.mode = PopupCacheMode.Normal;
         }
         // 优先级
         if (params.priority == undefined) {
@@ -439,9 +439,9 @@ export default class PopupManager {
 }
 
 /** 弹窗展示参数 */
-class PopupParamsType {
+export class PopupParamsType {
     /** 缓存模式 */
-    mode?: CacheMode = CacheMode.Normal;
+    mode?: PopupCacheMode = PopupCacheMode.Normal;
     /** 优先级（优先级大的优先展示） */
     priority?: number = 0;
     /** 立刻展示（将会挂起当前展示中的弹窗） */

@@ -20,12 +20,32 @@ export default class ToastBase<Options = any> extends Component {
     /** toast选项 */
     protected options: Options | undefined;
 
+    /** 展示位置 从0开始*/
+    get locationIndex(): number {
+        return this._locationIndex;
+    }
+    set locationIndex(value: number) {
+        this._locationIndex = value;
+    }
+    private _locationIndex = 0
+
+    /** toastID */
+    get toastID(): string {
+        return this._toastID;
+    }
+    set toastID(value: string) {
+        this._toastID = value;
+    }
+    private _toastID = "normalToast"
+
     /**
      * 展示Toast
      * @param options 弹窗选项
      * @param duration 动画时长
+     * @param locationIndex 出现位置
      */
-    public show(options?: Options, duration: number = this.animDuration) {
+    public show(options?: Options, locationIndex: number = 0, duration: number = this.animDuration, ) {
+        this._locationIndex = locationIndex
         return new Promise<void>(res => {
             // 储存选项
             this.options = options;
@@ -58,10 +78,9 @@ export default class ToastBase<Options = any> extends Component {
 
     /**
      * 隐藏toast
-     * @param suspended 是否被挂起
      * @param duration 动画时长
      */
-    public hide(suspended: boolean = false, duration: number = this.animDuration) {
+    public hide(duration: number = this.animDuration) {
         return new Promise<void>(res => {
             const node = this.node;
             // todo 修改播放Toast主体动画
@@ -73,16 +92,22 @@ export default class ToastBase<Options = any> extends Component {
                     // 关闭节点
                     node.active = false;
                     // 弹窗已完全隐藏（动画完毕）
-                    this.onHide && this.onHide(suspended);
+                    this.onHide && this.onHide();
                     // Done
                     res();
                     // 弹窗完成回调
-                    this.finishCallback && this.finishCallback(suspended);
+                    this.finishCallback && this.finishCallback();
                 })
             scaleTween.start()
             opacityTween.start()
         });
     }
+
+    public move(latestIndex: Number){
+        // todo 移动
+
+    }
+
 
     /**
      * 初始化（派生类请重写此函数以实现自定义逻辑）
@@ -104,19 +129,19 @@ export default class ToastBase<Options = any> extends Component {
      * Toast已完全隐藏（派生类请重写此函数以实现自定义逻辑）
      * @param suspended 是否被挂起
      */
-    protected onHide(suspended: boolean) { }
+    protected onHide() { }
 
     /**
      * Toast流程结束回调（注意：该回调为 PopupManager 专用，重写 hide 函数时记得调用该回调）
      */
     // @ts-ignore
-    protected finishCallback: (suspended: boolean) => void = null;
+    protected finishCallback: () => void = null;
 
     /**
      * 设置Toast完成回调（该回调为 PopupManager 专用）
      * @param callback 回调
      */
-    public setFinishCallback(callback: (suspended: boolean) => void) {
+    public setFinishCallback(callback: () => void) {
         this.finishCallback = callback;
     }
 

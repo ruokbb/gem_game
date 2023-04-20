@@ -3,15 +3,6 @@ import {_decorator,find, resources, Node,instantiate,Canvas,macro,  Prefab, isVa
 import {Game} from "./Game";
 const { ccclass, property } = _decorator;
 
-/** Toast缓存模式 */
-export enum ToastCacheMode {
-    /** 一次性的（立即销毁节点，预制体资源随即释放） */
-    Once = 1,
-    /** 正常的（立即销毁节点，但是缓存预制体资源） */
-    Normal,
-    /** 频繁的（只关闭节点，且缓存预制体资源） */
-    Frequent
-}
 
 /** Toast请求结果 */
 enum ShowResult {
@@ -19,14 +10,21 @@ enum ShowResult {
     Done = 1,
     /** 展示失败（加载失败） */
     Failed,
-    /** 等待中（已加入等待队列） */
-    Waiting
 }
+
+
+export const ToastID = {
+    FusionButton: "fusionButton",
+    DrawFailed: "drawFailed",
+    GemNotEnough: "gemNotEnough"
+}
+
+
 
 /**
  * Toast管理器
  */
-export default class ToastManager {
+export class ToastManager {
 
     /** 预制体缓存 */
     public static get prefabCache() { return this._prefabCache; }
@@ -46,10 +44,6 @@ export default class ToastManager {
     /** 连续展示Toast的时间间隔（秒） */
     public static interval: number = 0.05;
 
-    /** Toast缓存模式 */
-    public static get CacheMode() {
-        return ToastCacheMode;
-    }
 
     /** Toast请求结果类型 */
     public static get ShowResult() {
@@ -92,11 +86,10 @@ export default class ToastManager {
      * };
      * PopupManager.show('prefabs/MyPopup', options, params);
      */
-    public static show<Options>(path: string, id: string, options?: Options, params?: ToastParamsType): Promise<ShowResult> {
+    public static show<Options>(path: string, id: string, options?: Options): Promise<ShowResult> {
         return new Promise(async res => {
             // 解析处理参数
             // @ts-ignore
-            params = this.parseParams(params);
             // 先在缓存中获取Toast节点
             let node = this.getNodeFromCache(path);
             // 缓存中没有，动态加载预制体资源
@@ -149,7 +142,6 @@ export default class ToastManager {
             let showToast: ToastRequestType = {
                 path: path,
                 options: options,
-                params: params,
                 toast: toast,
                 node: node
             }
@@ -271,39 +263,6 @@ export default class ToastManager {
         }
     }
 
-    /**
-     * 解析参数
-     * @param params 参数
-     */
-    private static parseParams(params: ToastParamsType) {
-        if (params == undefined) {
-            return new ToastParamsType();
-        }
-        // 是否为对象
-        if (Object.prototype.toString.call(params) !== '[object Object]') {
-            warn('[PopupManager]', 'Toast参数无效，使用默认参数');
-            return new ToastParamsType();
-        }
-        // 缓存模式
-        if (params.mode == undefined) {
-            params.mode = ToastCacheMode.Normal;
-        }
-        // 优先级
-        if (params.priority == undefined) {
-            params.priority = 0;
-        }
-
-        return params;
-    }
-
-}
-
-/** Toast展示参数 */
-export class ToastParamsType {
-    /** 缓存模式 */
-    mode?: ToastCacheMode = ToastCacheMode.Normal;
-    /** 优先级（优先级大的优先展示） */
-    priority?: number = 0;
 }
 
 /** Toast展示请求 */
@@ -312,8 +271,6 @@ class ToastRequestType {
     path: string | undefined;
     /** Toast选项 */
     options: any;
-    /** 缓存模式 */
-    params: ToastParamsType | undefined;
     /** Toast组件 */
     toast: ToastBase | undefined;
     /** Toast节点 */

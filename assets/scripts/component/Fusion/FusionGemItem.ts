@@ -2,6 +2,8 @@ import { _decorator, Component, Node, Event } from 'cc';
 import {FusionView} from "../FusionView";
 import {GemLevelType} from "../../Common";
 import {isEnoughGemInFusionApi} from "../../api/FusionApi";
+import {NormalToast, NormalToastOptions} from "../Toast/NormalToast";
+import {ToastID, ToastManager} from "../../ToastManager";
 
 const { ccclass, property } = _decorator;
 
@@ -32,7 +34,11 @@ export class FusionGemItem extends Component {
 
         // 判断是否存在宝石
         if (!isEnoughGemInFusionApi(gemIndex, gemLevel as GemLevelType)){
-            // todo 触发提示
+            // 触发提示
+            const a : NormalToastOptions = {
+                content: "宝石数量不足"
+            }
+            ToastManager.show(NormalToast.path, ToastID.GemNotEnough, a)
         }else {
             this.fusionView!.getComponent(FusionView)!.gemSelectConfirm(gemLevel as GemLevelType, gemIndex)
         }

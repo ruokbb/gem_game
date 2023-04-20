@@ -1,8 +1,10 @@
 import {_decorator, Component, Label, Node, Vec3, PageView, resources, SpriteFrame, Sprite} from 'cc';
 import {GemLevelType, GemsNumber} from "../Common";
+import {NormalToast, NormalToastOptions} from "./Toast/NormalToast";
 import {clearSelectedGemsDataApi, selectGemApi, fusionGemApi} from "../api/FusionApi";
 import {FusionGemSelect} from "./Fusion/FusionGemSelect";
 import {ResultShow} from "./Fusion/ResultShow";
+import {ToastID, ToastManager} from "../ToastManager";
 
 const {ccclass, property} = _decorator;
 
@@ -153,7 +155,11 @@ export class FusionView extends Component {
     clickFusionButton() {
         // 判断是否选择完
         if (this.selectedCowIndexList.length < 2) {
-            // todo 提示
+            // 提示
+            const normalToastOptions : NormalToastOptions = {
+                content : "槽位空缺，无法合成宝石"
+            }
+            ToastManager.show(NormalToast.path, ToastID.FusionButton, normalToastOptions)
             return
         }
         // 调接口获取合成结果

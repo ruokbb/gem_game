@@ -1,6 +1,8 @@
 import {_decorator, color, Component, Label, Node, SpriteFrame, Sprite, resources} from 'cc';
 import {GemsPoolExpenses, GemsPoolOdds, GemsNumber, GlobalEventTarget, GlobalEventType} from "../Common";
 import {drawCardApi} from "../api/DrawCardApi"
+import {NormalToast, NormalToastOptions} from "./Toast/NormalToast";
+import {ToastManager, ToastID} from "../ToastManager";
 
 const { ccclass, property } = _decorator;
 
@@ -119,8 +121,12 @@ export class DrawCardView extends Component {
      */
     drawCallback(){
         const drawResult = drawCardApi(this.poolIndex)
-        // todo 抽卡失败，进行提示
+        // 抽卡失败，进行提示
         if (!drawResult.success){
+            const toastOptions: NormalToastOptions = {
+                content: drawResult.warning!
+            }
+            ToastManager.show(NormalToast.path,ToastID.DrawFailed, toastOptions)
             return
         }
         this.drawResult.level = drawResult.level as string

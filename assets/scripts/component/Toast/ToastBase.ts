@@ -88,6 +88,10 @@ export default class ToastBase<Options = any> extends Component {
                 })
             scaleTween.start()
             opacityTween.start()
+            // 定时关闭
+            this.scheduleOnce(()=>{
+                this.hide()
+            }, this.toastDuration)
         });
     }
 

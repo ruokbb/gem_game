@@ -82,7 +82,6 @@ export class ResultShow extends  Component{
      * 最终结果展示
      */
     showFinalResult(){
-        console.log("跑灯结束")
         this.scrollingTag = false
         this.fusionSuccessFlash = false
         // 跑灯停留
@@ -96,7 +95,7 @@ export class ResultShow extends  Component{
             }
         }))
         // 判断是否成功
-        // todo 闪，音乐，成功图标、失败变灰
+        // todo 其余宝石同时产生裂痕shader，最后一个产生一般最后决定成功，闪光shader
         if (this.fusionSuccess){
             // 触发update 遮照发光
             // 显示升级后等级打包

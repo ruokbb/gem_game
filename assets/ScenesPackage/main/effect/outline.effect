@@ -1,34 +1,34 @@
 CCEffect %{
-  name: outline
   techniques:
-    - name: tech
+    - name: opaque
       passes:
         - vert: vs:vert
           frag: fs:frag
-          properties:
+          properties: &props
             mainTexture: { value: white }
-            outline_color: { value: [1, 0, 0, 1], editor: { displayName: "Outline Color" } }
-            outline_width: { value: 0.01, editor: { displayName: "Outline Width", type: number, range: [0, 0.1] } }
+            outline_color: { value: [1.0, 0.0, 0.0, 1.0], editor: { type:color, displayName: "Outline Color" } }
+            outline_width: { value: 0.01, editor: { displayName: "Outline Width", type: number, range: [0.0, 0.1] } }
 }%
 
 CCProgram vs %{
-
   precision highp float;
-  #include <cc-global>
+  #include <builtin/uniforms/cc-global>
 
-  in vec4 a_position;
+  in vec3 a_position;
+
   in vec2 a_uv0;
+  out vec2 v_uv0;
 
   uniform Constant {
     vec4 outline_color;
     float outline_width;
-  } s;
+  };
 
-  out vec2 v_uv0;
 
   vec4 vert() {
-    vec4 pos = cc_matViewProj * a_position;
-    v_uv0 = a_uv0 + s.outline_width * (2.0 * a_uv0 - 1.0);
+    vec4 pos_tem = vec4(a_position, 1);
+    vec4 pos = cc_matViewProj * pos_tem;
+    v_uv0 = a_uv0 + outline_width * (2.0 * a_uv0 - 1.0);
     return pos;
   }
 }%
@@ -36,14 +36,14 @@ CCProgram vs %{
 CCProgram fs %{
   
   precision highp float;
-  #include <cc-global>
+  #include <builtin/uniforms/cc-global>
 
-  in Texture2D mainTexture;
+  uniform sampler2D mainTexture;
   in vec2 v_uv0;
 
-  uniform Constant {
+  uniform Outline {
     vec4 outline_color;
-  } s;
+  };
 
   vec4 frag() {
     vec4 originColor = texture(mainTexture, v_uv0);
@@ -51,9 +51,9 @@ CCProgram fs %{
 
     // 边缘高亮（根据 alpha 值）
     if (alpha > 0.4) {
-      return s.outline_color * alpha;
+      return outline_color * alpha;
     } else {
-      return s.outline_color * alpha; // 根据需求设定非高亮区域颜色
+      return outline_color * alpha; // 根据需求设定非高亮区域颜色
     }
   }
 }%

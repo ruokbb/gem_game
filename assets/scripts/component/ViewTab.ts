@@ -1,4 +1,4 @@
-import { _decorator, Component,UITransform, Node, Vec3 } from 'cc';
+import { _decorator, Component,Color,Sprite, Node, Vec3 } from 'cc';
 import {FusionView} from "./FusionView";
 import {GlobalVar} from "../Global";
 import {Background} from "./Background";
@@ -39,13 +39,22 @@ export class ViewTab extends Component {
                 leaveFusionView = true
             }
         }
+        // TabIcon 边缘发光
+        this.setGlow(new Color(255,0,0,255), 0.02)
+
         // 清空合成宝石那边的临时选择数据
         this.otherView.forEach((value) => {
+            value.getComponent(ViewTab)!.setGlow(new Color(255,0,0,255), 0)
             value.position = new Vec3(0, 1200, 0)
             if (value.name == "FusionView" && leaveFusionView){
                 value.getComponent(FusionView)!.clearCow()
             }
         })
+    }
+
+    setGlow(color: Color, width: number){
+        this.node.getComponent(Sprite)!.customMaterial!.setProperty("outline_color", color)
+        this.node.getComponent(Sprite)!.customMaterial!.setProperty("outline_width", width)
     }
 
 }

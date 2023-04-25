@@ -95,7 +95,7 @@ export class ResultShow extends  Component{
             }
         }))
         // 判断是否成功
-        // todo 其余宝石同时产生裂痕shader，最后一个产生一般最后决定成功，闪光shader
+        // todo 其余宝石同时产生裂痕ta bshader，最后一个产生一般最后决定成功，闪光shader
         if (this.fusionSuccess){
             // 触发update 遮照发光
             // 显示升级后等级打包

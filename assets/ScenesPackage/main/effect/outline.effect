@@ -6,6 +6,7 @@ CCEffect %{
           frag: fs:frag
           properties: &props
             mainTexture: { value: white }
+            alphaThreshold: {value: 0.5}
             outline_color: { value: [1.0, 0.0, 0.0, 1.0], editor: { type:color, displayName: "Outline Color" } }
             outline_width: { value: 0.01, editor: { displayName: "Outline Width", type: number, range: [0.0, 0.1] } }
 }%
@@ -13,11 +14,16 @@ CCEffect %{
 CCProgram vs %{
   precision highp float;
   #include <builtin/uniforms/cc-global>
+  #include <builtin/uniforms/cc-local>
 
   in vec3 a_position;
+  in vec4 a_color;
+  out vec4 v_color;
 
+  #if USE_TEXTURE
   in vec2 a_uv0;
   out vec2 v_uv0;
+  #endif
 
   uniform Constant {
     vec4 outline_color;
@@ -26,9 +32,18 @@ CCProgram vs %{
 
 
   vec4 vert() {
-    vec4 pos_tem = vec4(a_position, 1);
-    vec4 pos = cc_matViewProj * pos_tem;
-    v_uv0 = a_uv0 + outline_width * (2.0 * a_uv0 - 1.0);
+    vec4 pos = vec4(a_position, 1);
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos
+    #else
+    pos = cc_matViewProj * pos
+    #endif
+
+    #if USE_TEXTURE
+    v_uv0 = a_uv0
+    #endif
+    v_color = a_color
     return pos;
   }
 }%
@@ -37,23 +52,72 @@ CCProgram fs %{
   
   precision highp float;
   #include <builtin/uniforms/cc-global>
+  #include <alpha-test>
 
-  uniform sampler2D mainTexture;
   in vec2 v_uv0;
+  in vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D mainTexture;
+  #endif
+
+
+
+  #if SHOW_OUT_LINE
 
   uniform Outline {
     vec4 outline_color;
+    float outline_width
   };
 
-  vec4 frag() {
-    vec4 originColor = texture(mainTexture, v_uv0);
-    float alpha = originColor.a;
-
-    // 边缘高亮（根据 alpha 值）
-    if (alpha > 0.4) {
-      return outline_color * alpha;
-    } else {
-      return outline_color * alpha; // 根据需求设定非高亮区域颜色
+  vec4 getTextureColor(sampler2D texture, vec2 v_uv0) {
+    if (v_uv0.x > 1.0 || v_uv0.x < 0.0 || v_uv0.y > 1.0 || v_uv0.y < 0.0) {
+      return vec4(0.0, 0.0, 0.0, 0.0);
     }
+    return texture(texture, v_uv0);
+  }
+
+  // 获取周边像素平均值
+  float getBgAlpha() {
+    vec4 color_up = getTextureColor(texture, v_uv0 + vec2(0, outlineWidth)); 
+    vec4 color_down = getTextureColor(texture, v_uv0 - vec2(0, outlineWidth)); 
+    vec4 color_left = getTextureColor(texture, v_uv0 - vec2(outlineWidth, 0)); 
+    vec4 color_right = getTextureColor(texture, v_uv0 + vec2(outlineWidth, 0)); 
+    vec4 color_up_left = getTextureColor(texture, v_uv0 + vec2(outlineWidth, -outlineWidth)); 
+    vec4 color_up_right = getTextureColor(texture, v_uv0 + vec2(outlineWidth, outlineWidth)); 
+    vec4 color_down_left = getTextureColor(texture, v_uv0 + vec2(-outlineWidth, -outlineWidth)); 
+    vec4 color_down_right = getTextureColor(texture, v_uv0 + vec2(-outlineWidth, outlineWidth)); 
+    float total = color_right.a + color_left.a + color_down.a + color_up.a + color_up_left.a + color_up_right.a + color_down_left.a + color_down_right.a; 
+    return clamp(total, 0.0, 1.0);
+  }
+
+  #endif
+
+  vec4 frag() {
+    vec o = vec4(1,1,1,1);
+    #if USE_TEXTURE
+    o *= texture(mainTexture, v_uv0);
+      #if CC_USE_ALPHA_ATLAS_TEXTTURE
+      o.a *= texture2D(texture, v_uv0 + vec2(0, 0.5)).r;
+      #endif
+    #endif
+
+    o *= v_color;
+    ALPHA_TEST(o);
+    #if SHOW_OUT_LINE
+    if (outline_width == 0.0){
+      return o;
+    }
+
+    // 获取发光色
+    vec4 color_dest = outline_color * getBgAlpha();
+    // 图案颜色
+    vec4 color_src = o;
+
+    o = color_src * color_src.a + color_dest * (1.0 - color_src.a);
+    return o;
+    #endif
+    return o
   }
 }%

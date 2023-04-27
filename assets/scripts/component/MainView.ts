@@ -1,11 +1,12 @@
 import {_decorator, Component, Label, Node} from 'cc';
 import {getPlayerGemsDataApi} from "../api/PlayerDataApi";
 import {GemLevelType, GemsNumber, GlobalEventType, LevelGain, GlobalEventTarget} from "../Common";
+import {ViewBase} from "./ViewBase";
 const { ccclass, property } = _decorator;
 
 
 @ccclass('MainView')
-export class MainView extends Component {
+export class MainView extends ViewBase {
 
     @property({type: Node})
     private mainGemsLayout: Node | undefined

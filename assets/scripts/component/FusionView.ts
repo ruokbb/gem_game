@@ -5,12 +5,13 @@ import {clearSelectedGemsDataApi, selectGemApi, fusionGemApi} from "../api/Fusio
 import {FusionGemSelect} from "./Fusion/FusionGemSelect";
 import {ResultShow} from "./Fusion/ResultShow";
 import {ToastID, ToastManager} from "../ToastManager";
+import {ViewBase} from "./ViewBase";
 
 const {ccclass, property} = _decorator;
 
 
 @ccclass('FusionView')
-export class FusionView extends Component {
+export class FusionView extends ViewBase {
 
     @property({type: Node})
     GemsSelectViewNode: Node | undefined

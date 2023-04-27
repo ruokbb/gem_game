@@ -3,11 +3,12 @@ import {GemsPoolExpenses, GemsPoolOdds, GemsNumber, GlobalEventTarget, GlobalEve
 import {drawCardApi} from "../api/DrawCardApi"
 import {NormalToast, NormalToastOptions} from "./Toast/NormalToast";
 import {ToastManager, ToastID} from "../ToastManager";
+import {ViewBase} from "./ViewBase";
 
 const { ccclass, property } = _decorator;
 
 @ccclass('DrawCardView')
-export class DrawCardView extends Component {
+export class DrawCardView extends ViewBase {
 
     @property({type: Node})
     private gemsPools: Node[] = []

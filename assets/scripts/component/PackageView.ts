@@ -1,11 +1,12 @@
 import {_decorator, color, Component, Label, Node, PageView, Sprite} from 'cc';
 import {getPlayerGemsDataApi} from "../api/PlayerDataApi";
 import {GemsNumber, GlobalEventTarget, GlobalEventType} from "../Common";
+import {ViewBase} from "./ViewBase";
 
 const { ccclass, property } = _decorator;
 
 @ccclass('PackageView')
-export class PackageView extends Component {
+export class PackageView extends ViewBase {
 
     @property({type: Node})
     protected leftButtonList: Node[] = []

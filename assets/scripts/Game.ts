@@ -20,7 +20,16 @@ export class Game extends Component {
     @property({type: Number, displayName: "金币收益计算间隔（s）"})
     private coinInterval: number = 10
 
+    public showingView: Node | null | undefined // 正在展示的界面
+    public selectedViewTab: Node | null | undefined // 选中的ViewTab
+
+    public test() {}
+
     protected onLoad() {
+        // todo 绑定mainView 和对应 tab
+        this.showingView = find("Canvas/MainView")
+        this.selectedViewTab = find("Canvas/MainViewTab")
+
         // 监听金币、等级刷新事件
         GlobalEventTarget.on(GlobalEventType.UPDATE_COIN, this.updateCoinShow, this)
         GlobalEventTarget.on(GlobalEventType.UPDATE_LEVEL, this.updateLevelShow, this)

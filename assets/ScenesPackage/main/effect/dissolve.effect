@@ -1,94 +1,110 @@
 CCEffect %{
   techniques:
-  - name: base
-    passes:
-    - vert: vs:main
-      frag: fs:main
-      blendState:
-        targets:
-        - blend: true
-      depthStencilState:
-        depthTest: false
-        depthWrite: false
-      rasterizerState:
-        cullMode: none
-  properties:
-    _MainTexture: {type: 2d, value: white}
-    dissolveDirection: {type: vector, value: [0, 0], displayName: 渐隐方向}
-    edgeSharpness: {type: float, value: 1, editor: {displayName: 边缘锐利度, step: 0.1}}
-    dissolveAmount: {type: float, value: 0, editor: {range: [0, 1], displayName: 溶解比例 }}
-    randomDissolve: {type: int, value: 0, editor: {displayName: 是否随机溶解}} 
-    seed: {type: float, value: 0, editor: {displayName: 随机种子}}
-%}
+    - name: opaque
+      passes:
+        - vert: vs:vert
+          frag: fs:frag
+          properties: &props
+            mainTexture: { value: white }
+            noiseTexture: {value: white}
+            threshold: {value: 0.1, editor: {tooltip: "消失阈值", type: number, range: [0.0, 1, 0.1]}}
+            melt: {value: 0.15, editor: {tooltip: "融化阈值", type: number, range: [0.0, 1, 0.1]}}
+}%
 
 CCProgram vs %{
   precision highp float;
+  #include <builtin/uniforms/cc-global>
+  #include <builtin/uniforms/cc-local>
 
-  #include <cc-global>
-  #include <cc-local>
-  #include <shadow-prepass>
-  #include <shadow-cascades>
-  #include <instance>
-
-  in vec2 a_texCoord;
+  in vec3 a_position;
   in vec4 a_color;
-
-  out vec2 v_texCoord;
   out vec4 v_color;
 
-  void main () {
+  #if USE_TEXTURE
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  #endif
+
+  vec4 vert() {
     vec4 pos = vec4(a_position, 1);
-    #if CC_USE_MODEL_TRANSFORM
-      pos = cc_matModel * pos;
+
+    #if CC_USE_MODEL
+    pos = cc_matViewProj * cc_matWorld * pos
+    #else
+    pos = cc_matViewProj * pos
     #endif
-    float alignment = cc_matProj[0].z;
-    float flippedTexCoord = (cc_mirrorFlag & CC_FLIP_U_TEXCOORD) == 0 ? a_texCoord.x : 1.0 - a_texCoord.x; 
-    pos.xy += cc_packingWidth * vec2((alignment - flippedTexCoord) * cc_matProj[2].z, 0);
 
-    v_texCoord = a_texCoord;
-    v_color = a_color;
-
-    #pragma CCEX_SHADOWBEFOREPASS
-    #pragma CCEX_SPHEREINST_SHADECLACC
-    gl_Position = cc_matProj * pos;
+    #if USE_TEXTURE
+    v_uv0 = a_uv0
+    #endif
+    v_color = a_color
+    return pos;
   }
 }%
 
 CCProgram fs %{
+  
   precision highp float;
-
+  #include <builtin/uniforms/cc-global>
   #include <alpha-test>
-  #include <shadow-decode>
 
-  uniform sampler2D _MainTexture;
-  uniform vec2 dissolveDirection;
-  uniform float edgeSharpness;
-  uniform float dissolveAmount;
-  uniform int randomDissolve;
-  uniform float seed;
-
-  in vec2 v_texCoord;
   in vec4 v_color;
 
-  out vec4 o_color;
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D mainTexture;
+  #endif
 
-  void main () {
+  uniform Prop {
+    number threshold;
+    number melt;
+  };
 
-    vec4 col = texture(_MainTexture, v_texCoord) * v_color;
-    float value = dot(dissolveDirection, v_texCoord * 2.0);
-
-    if (randomDissolve == 1) { 
-      vec3 randomPos = vec3(v_texCoord, seed);
-      float noise = fract(sin(dot(randomPos, vec3(12.9898, 78.233, 122.993))) * 43758.5453);
-      value = (value + noise) * 0.5;
+  vec4 getTextureColor(sampler2D texture, vec2 v_uv0) {
+    if (v_uv0.x > 1.0 || v_uv0.x < 0.0 || v_uv0.y > 1.0 || v_uv0.y < 0.0) {
+      return vec4(0.0, 0.0, 0.0, 0.0);
     }
-    
-    float dissolve = smoothstep(dissolveAmount, dissolveAmount + edgeSharpness, value);
+    return texture(texture, v_uv0);
+  }
 
-    col.a *= dissolve;
-    col.rgb *= col.a;
+  // 获取周边像素rgb平均值
+  vec4 getBgColor() {
+    vec4 color_up = getTextureColor(texture, v_uv0 + vec2(0, outlineWidth)); 
+    vec4 color_down = getTextureColor(texture, v_uv0 - vec2(0, outlineWidth)); 
+    vec4 color_left = getTextureColor(texture, v_uv0 - vec2(outlineWidth, 0)); 
+    vec4 color_right = getTextureColor(texture, v_uv0 + vec2(outlineWidth, 0)); 
+    vec4 color_up_left = getTextureColor(texture, v_uv0 + vec2(outlineWidth, -outlineWidth)); 
+    vec4 color_up_right = getTextureColor(texture, v_uv0 + vec2(outlineWidth, outlineWidth)); 
+    vec4 color_down_left = getTextureColor(texture, v_uv0 + vec2(-outlineWidth, -outlineWidth)); 
+    vec4 color_down_right = getTextureColor(texture, v_uv0 + vec2(-outlineWidth, outlineWidth)); 
+    vec4 final_color = (color_up + color_down + color_left + color_right + color_up_left + color_up_right + 
+                        color_down_left + color_down_right) / 8.0
+    return final_color;
+  }
 
-    o_color = col;
-    doAlphaDiscard();
+  vec4 frag() {
+    vec o = vec4(1,1,1,1);
+    #if USE_TEXTURE
+    o *= texture(mainTexture, v_uv0);
+      #if CC_USE_ALPHA_ATLAS_TEXTTURE
+      o.a *= texture2D(texture, v_uv0 + vec2(0, 0.5)).r;
+      #endif
+    #endif
+
+    vec4 noiseColor = texture(noiseTexture, v_uv0)
+    if (noiseColor.r < threshold){
+      discard;
+    } 
+
+    if (noiseColor.r < threshold + melt){
+      // 获取周围平均值
+      vec4 meltColor = getBgColor();
+      // number percent = saturate((threshold - noiseColor.r) / melt)
+      number percent = clamp((threshold - noiseColor.r) / melt, 0.0, 1.0)
+      vec4 finalColor = mix(meltColor, o, percent)
+      return finalColor
+    }
+
+    return o
   }
 }%

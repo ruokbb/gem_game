@@ -11,7 +11,6 @@ export class ViewBase extends Component{
     public showVx() {
         return new Promise(res => {
             this.node.setPosition(new Vec3(0,0,0))
-
         })
     }
 

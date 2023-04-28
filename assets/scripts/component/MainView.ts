@@ -1,4 +1,4 @@
-import {_decorator, Component, Label, Node} from 'cc';
+import {_decorator, Component, Label, Node, Vec3} from 'cc';
 import {getPlayerGemsDataApi} from "../api/PlayerDataApi";
 import {GemLevelType, GemsNumber, GlobalEventType, LevelGain, GlobalEventTarget} from "../Common";
 import {ViewBase} from "./ViewBase";
@@ -55,6 +55,14 @@ export class MainView extends ViewBase {
             gemMask!.getChildByName("levelLabel")!.getComponent(Label)!.string = value
         })
     }
+
+    public showVx(): Promise<unknown> {
+        return new Promise(res => {
+            this.node.setPosition(new Vec3(0,0,0))
+            // todo 主界面的每一个GridItem 动效，外圈到内圈逐一显现，波动特效shader幅度由大到小
+        })
+    }
+
 }
 
 

@@ -23,12 +23,17 @@ export class ViewTab extends Component {
      * 切换view的按钮点击
       */
     tabClick(){
+        const showingView: Node = find("Canvas")!.getComponent(Game)!.showingView!
+        const selectedViewTab: Node = find("Canvas")!.getComponent(Game)!.selectedViewTab!
+
+        if (selectedViewTab.name == this.node.name){
+            return
+        }
+
         // 移动背景
         // @ts-ignore
         this.bg.getComponent(Background).backgroundScroll(this.viewIndex)
 
-        const showingView: Node = find("Canvas")!.getComponent(Game)!.showingView!
-        const selectedViewTab: Node = find("Canvas")!.getComponent(Game)!.selectedViewTab!
         // tab外发光取消
         selectedViewTab.getComponent(ViewTab)!.setGlow(new Color(255,0,0,255), 0)
         if (showingView.name == "FusionView"){
@@ -46,8 +51,9 @@ export class ViewTab extends Component {
     }
 
     setGlow(color: Color, width: number){
-        this.node.getComponent(Sprite)!.customMaterial!.setProperty("outline_color", color)
-        this.node.getComponent(Sprite)!.customMaterial!.setProperty("outline_width", width)
+        const pass = this.node.getComponent(Sprite)!.customMaterial!.passes[0]
+        pass.setUniform(pass.getHandle("outline_color"), color)
+        pass.setUniform(pass.getHandle("outline_width"), width)
     }
 
 }

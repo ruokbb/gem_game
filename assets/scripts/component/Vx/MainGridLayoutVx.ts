@@ -1,8 +1,8 @@
 import { _decorator, Component,tween,UIOpacity, Node, Label} from 'cc';
 const { ccclass, property } = _decorator;
 
-@ccclass("MainGridVx")
-export class MainGridVx extends Component{
+@ccclass("MainGridLayoutVx")
+export class MainGridLayoutVx extends Component{
     @property({type: Number, range: [0,1,0.1], displayName: "动画持续时间"})
     private animTime = 0
 

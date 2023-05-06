@@ -4,6 +4,7 @@ import {GlobalVar} from "../Global";
 import {Background} from "./Background";
 import {ViewBase} from "./ViewBase";
 import {Game} from "../Game";
+import {game} from "../../../../../../../Applications/CocosCreator/Creator/3.6.3/CocosCreator.app/Contents/Resources/resources/3d/engine/cocos/core";
 const { ccclass, property } = _decorator;
 
 @ccclass('ViewTab')
@@ -23,8 +24,9 @@ export class ViewTab extends Component {
      * 切换view的按钮点击
       */
     tabClick(){
-        const showingView: Node = find("Canvas")!.getComponent(Game)!.showingView!
-        const selectedViewTab: Node = find("Canvas")!.getComponent(Game)!.selectedViewTab!
+        const gameObject: Game = find("Canvas")!.getComponent(Game)!
+        const showingView: Node = gameObject.showingView!
+        const selectedViewTab: Node = gameObject.selectedViewTab!
 
         if (selectedViewTab.name == this.node.name){
             return
@@ -35,7 +37,7 @@ export class ViewTab extends Component {
         this.bg.getComponent(Background).backgroundScroll(this.viewIndex)
 
         // tab外发光取消
-        selectedViewTab.getComponent(ViewTab)!.setGlow(new Color(255,0,0,255), 0)
+        selectedViewTab.getComponent(ViewTab)!.setGlow(false)
         if (showingView.name == "FusionView"){
             // 清空合成宝石那边的临时选择数据
             showingView.getComponent(FusionView)!.clearCow()
@@ -47,13 +49,18 @@ export class ViewTab extends Component {
         this.view!.getComponent(ViewBase)!.showVx()
 
         // TabIcon 边缘发光
-        this.setGlow(new Color(255,0,0,255), 0.02)
+        this.setGlow()
+
+        // 更新选中的view和tab
+        gameObject.selectedViewTab = this.node
+        gameObject.showingView = this.view
     }
 
-    setGlow(color: Color, width: number){
-        const pass = this.node.getComponent(Sprite)!.customMaterial!.passes[0]
-        pass.setUniform(pass.getHandle("outline_color"), color)
-        pass.setUniform(pass.getHandle("outline_width"), width)
+    setGlow(showGlow = true){
+        // todo 控制发光
+        // const pass = this.node.getComponent(Sprite)!.customMaterial!.passes[0]
+        // pass.setUniform(pass.getHandle("outline_color"), color)
+        // pass.setUniform(pass.getHandle("outline_width"), width)
     }
 
 }

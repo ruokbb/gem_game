@@ -1,110 +1,146 @@
+// Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
 CCEffect %{
   techniques:
-    - name: opaque
-      passes:
-        - vert: vs:vert
-          frag: fs:frag
-          properties: &props
-            mainTexture: { value: white }
-            noiseTexture: {value: white}
-            threshold: {value: 0.1, editor: {tooltip: "消失阈值", type: number, range: [0.0, 1, 0.1]}}
-            melt: {value: 0.15, editor: {tooltip: "融化阈值", type: number, range: [0.0, 1, 0.1]}}
+  - passes:
+    - vert: sprite-vs:vert
+      frag: sprite-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        alphaThreshold: { value: 0.5 }
+        noiseTexture: {value: white}
+        threshold: {value: 0.1, editor: {tooltip: "消失阈值", type: number, range: [0.0, 1, 0.1]}}
+        melt: {value: 0.15, editor: {tooltip: "融化阈值", type: number, range: [0.0, 1, 0.1]}}
+        spriteWidth: { 
+          value: 167,
+          editor: {
+            tooltip: "纹理宽度（px）"
+          }
+        }
+        spriteHeight: { 
+          value: 120,
+          editor: {
+            tooltip: "纹理高度（px）"
+          }
+        }
+        bgColorRange: { 
+          value: 6,
+          editor: {
+            tooltip: "背景颜色范围（px）"
+          }
+        }
 }%
 
-CCProgram vs %{
+CCProgram sprite-vs %{
   precision highp float;
   #include <builtin/uniforms/cc-global>
-  #include <builtin/uniforms/cc-local>
 
   in vec3 a_position;
+  in vec2 a_texCoord;
   in vec4 a_color;
+
   out vec4 v_color;
-
-  #if USE_TEXTURE
-  in vec2 a_uv0;
   out vec2 v_uv0;
-  #endif
 
-  vec4 vert() {
+
+  vec4 vert () {
     vec4 pos = vec4(a_position, 1);
 
-    #if CC_USE_MODEL
-    pos = cc_matViewProj * cc_matWorld * pos
-    #else
-    pos = cc_matViewProj * pos
-    #endif
+    pos = cc_matViewProj * pos;
 
-    #if USE_TEXTURE
-    v_uv0 = a_uv0
-    #endif
-    v_color = a_color
+    v_uv0 = a_texCoord;
+
+    v_color = a_color;
+
     return pos;
   }
 }%
 
-CCProgram fs %{
-  
+CCProgram sprite-fs %{
   precision highp float;
-  #include <builtin/uniforms/cc-global>
   #include <alpha-test>
 
   in vec4 v_color;
-
-  #if USE_TEXTURE
   in vec2 v_uv0;
-  uniform sampler2D mainTexture;
-  #endif
+  #pragma builtin(local)
+  layout(set = 2, binding = 11) uniform sampler2D cc_spriteTexture;
 
-  uniform Prop {
-    number threshold;
-    number melt;
+  uniform Dissolve {
+    float threshold;
+    float melt;
+    // 纹理宽度（px）
+    float spriteWidth;
+    // 纹理高度（px）
+    float spriteHeight;
+    // 平均颜色取值范围（px）
+    float bgColorRange;
   };
+  uniform sampler2D noiseTexture;
 
-  vec4 getTextureColor(sampler2D texture, vec2 v_uv0) {
+  #if USE_DISSOLVE
+  // 定义向周边搜索的圈数
+  #define range 5.0
+
+  vec4 getTextureColor(sampler2D localTexture, vec2 v_uv0) {
     if (v_uv0.x > 1.0 || v_uv0.x < 0.0 || v_uv0.y > 1.0 || v_uv0.y < 0.0) {
       return vec4(0.0, 0.0, 0.0, 0.0);
     }
-    return texture(texture, v_uv0);
+    return texture(localTexture, v_uv0);
   }
 
-  // 获取周边像素rgb平均值
+   /**
+   * 获取周围rgb均值
+   */
   vec4 getBgColor() {
-    vec4 color_up = getTextureColor(texture, v_uv0 + vec2(0, outlineWidth)); 
-    vec4 color_down = getTextureColor(texture, v_uv0 - vec2(0, outlineWidth)); 
-    vec4 color_left = getTextureColor(texture, v_uv0 - vec2(outlineWidth, 0)); 
-    vec4 color_right = getTextureColor(texture, v_uv0 + vec2(outlineWidth, 0)); 
-    vec4 color_up_left = getTextureColor(texture, v_uv0 + vec2(outlineWidth, -outlineWidth)); 
-    vec4 color_up_right = getTextureColor(texture, v_uv0 + vec2(outlineWidth, outlineWidth)); 
-    vec4 color_down_left = getTextureColor(texture, v_uv0 + vec2(-outlineWidth, -outlineWidth)); 
-    vec4 color_down_right = getTextureColor(texture, v_uv0 + vec2(-outlineWidth, outlineWidth)); 
-    vec4 final_color = (color_up + color_down + color_left + color_right + color_up_left + color_up_right + 
-                        color_down_left + color_down_right) / 8.0
-    return final_color;
+
+    // 每一圈的对应的步长
+    float per_step_x = (1.0 / spriteWidth) * (bgColorRange / range);
+    float per_step_y = (1.0 / spriteHeight) * (bgColorRange / range);
+
+    // 取样周边一定范围透明度
+    vec4 totalColor = new vec4(0,0,0,0);
+    for (float x = -range; x <= range; x++) {
+      for (float y = -range; y <= range; y++) {
+        totalColor += getTextureColor(cc_spriteTexture, v_uv0 + vec2(x * per_step_x, y * per_step_y)); 
+      }
+    }
+    totalAlpha /= (range + range + 1.0) * (range + range + 1.0);
+    return totalAlpha;
   }
+  #endif
 
-  vec4 frag() {
-    vec o = vec4(1,1,1,1);
-    #if USE_TEXTURE
-    o *= texture(mainTexture, v_uv0);
-      #if CC_USE_ALPHA_ATLAS_TEXTTURE
-      o.a *= texture2D(texture, v_uv0 + vec2(0, 0.5)).r;
-      #endif
-    #endif
+  vec4 frag () {
 
-    vec4 noiseColor = texture(noiseTexture, v_uv0)
+    vec4 o = vec4(1, 1, 1, 1);
+    o *= texture(cc_spriteTexture, v_uv0);
+    o *= v_color;
+    ALPHA_TEST(o);
+
+    #if USE_DISSOLVE
+    // 低于阈值直接舍弃
+    vec4 noiseColor = texture(noiseTexture, v_uv0);
     if (noiseColor.r < threshold){
-      discard;
-    } 
-
+        discard;
+    }
+    
     if (noiseColor.r < threshold + melt){
       // 获取周围平均值
       vec4 meltColor = getBgColor();
-      // number percent = saturate((threshold - noiseColor.r) / melt)
-      number percent = clamp((threshold - noiseColor.r) / melt, 0.0, 1.0)
+      float percent = clamp((threshold - noiseColor.r) / melt, 0.0, 1.0)
       vec4 finalColor = mix(meltColor, o, percent)
       return finalColor
     }
+    #endif
 
-    return o
+    return o;
   }
 }%

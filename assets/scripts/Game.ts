@@ -40,9 +40,8 @@ export class Game extends Component {
     public test() {}
 
     protected onLoad() {
-        // todo 绑定mainView 和对应 tab
-        this._showingView = find("Canvas/MainView")
-        this._selectedViewTab = find("Canvas/MainViewTab")
+        this._showingView = find("Canvas/View/MainView")
+        this._selectedViewTab = find("Canvas/viewTab/MainTab")
 
         // 监听金币、等级刷新事件
         GlobalEventTarget.on(GlobalEventType.UPDATE_COIN, this.updateCoinShow, this)

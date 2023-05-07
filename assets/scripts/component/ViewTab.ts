@@ -1,10 +1,8 @@
 import {_decorator, Component, Sprite, Node, Material, find, resources, SpriteFrame, UITransform} from 'cc';
 import {FusionView} from "./FusionView";
-import {GlobalVar} from "../Global";
 import {Background} from "./Background";
 import {ViewBase} from "./ViewBase";
 import {Game} from "../Game";
-import {GemsLevel} from "../Common";
 const { ccclass, property } = _decorator;
 
 @ccclass('ViewTab')
@@ -20,18 +18,19 @@ export class ViewTab extends Component {
     private bg: Node | undefined
 
     protected start() {
-        this.loadEffect("material/outline")
-        const gameObject: Game = find("Canvas")!.getComponent(Game)!
-        const selectedViewTab: Node = gameObject.selectedViewTab!
-        if (this.node.name == selectedViewTab.name){
-            this.setGlow()
-        }
+        this.loadMaterial("material/outline")
     }
 
-
-    loadEffect(resourcePath: string){
+    loadMaterial(resourcePath: string){
         resources.load( resourcePath, Material, (err, material) => {
-            this.node.getComponent(Sprite)!.setMaterial(material, 0)
+            this.node.getComponent(Sprite)!.customMaterial = material
+            const gameObject: Game = find("Canvas")!.getComponent(Game)!
+            const selectedViewTab: Node = gameObject.selectedViewTab!
+            if (this.node.name == selectedViewTab.name){
+                this.setGlow()
+            }else {
+                this.setGlow(false)
+            }
         })
     }
 
@@ -73,17 +72,16 @@ export class ViewTab extends Component {
     }
 
     setGlow(showGlow = true){
-        // todo 控制发光
         if (!showGlow){
-            this.node.getComponent(Sprite)!.customMaterial!.setProperty("glowRange", 0)
+            this.node.getComponent(Sprite)!.material!.setProperty("glowRange", 0)
             return
         }
-        const width = this.node.getComponent(UITransform)!.contentSize.width
-        const height = this.node.getComponent(UITransform)!.contentSize.height
-        this.node.getComponent(Sprite)!.customMaterial!.setProperty("spriteWidth", width)
-        this.node.getComponent(Sprite)!.customMaterial!.setProperty("spriteHeight", height)
-        this.node.getComponent(Sprite)!.customMaterial!.setProperty("glowRange", 6)
-        this.node.getComponent(Sprite)!.customMaterial!.setProperty("glowThreshold", 0.1)
+        const width = Math.floor(this.node.getComponent(UITransform)!.contentSize.width)
+        const height = Math.floor(this.node.getComponent(UITransform)!.contentSize.height)
+        this.node.getComponent(Sprite)!.material!.setProperty("spriteWidth", width)
+        this.node.getComponent(Sprite)!.material!.setProperty("spriteHeight", height)
+        this.node.getComponent(Sprite)!.material!.setProperty("glowRange", 6)
+        this.node.getComponent(Sprite)!.material!.setProperty("glowThreshold", 0.1)
         // const pass = this.node.getComponent(Sprite)!.customMaterial!.passes[0]
         // pass.setUniform(pass.getHandle("outline_color"), color)
         // pass.setUniform(pass.getHandle("outline_width"), width)

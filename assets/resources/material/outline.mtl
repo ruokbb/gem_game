@@ -4,14 +4,12 @@
   "_objFlags": 0,
   "_native": "",
   "_effectAsset": {
-    "__uuid__": "0d385aa3-7436-4dd0-b198-50b44255c120",
+    "__uuid__": "13a64415-d206-4399-8b5e-14968654b703",
     "__expectedType__": "cc.EffectAsset"
   },
   "_techIdx": 0,
   "_defines": [
-    {
-      "SHOW_OUT_LINE": true
-    }
+    {}
   ],
   "_states": [
     {
@@ -25,14 +23,6 @@
     }
   ],
   "_props": [
-    {
-      "glowColor": {
-        "__type__": "cc.Color",
-        "r": 255,
-        "g": 255,
-        "b": 252,
-        "a": 255
-      }
-    }
+    {}
   ]
 }

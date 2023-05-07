@@ -3,7 +3,7 @@ const { ccclass, property } = _decorator;
 
 @ccclass("MainGridLayoutVx")
 export class MainGridLayoutVx extends Component{
-    @property({type: Number, range: [0,1,0.1], displayName: "动画持续时间"})
+    @property({type: Number, range: [0,5,0.1], displayName: "动画持续时间"})
     private animTime = 0
 
     @property({type: Number, range: [0,0.5,0.1], displayName: "批次间隔" })

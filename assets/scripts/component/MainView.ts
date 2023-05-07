@@ -2,6 +2,7 @@ import {_decorator, Component, Label, Node, Vec3} from 'cc';
 import {getPlayerGemsDataApi} from "../api/PlayerDataApi";
 import {GemLevelType, GemsNumber, GlobalEventType, LevelGain, GlobalEventTarget} from "../Common";
 import {ViewBase} from "./ViewBase";
+import {MainGridLayoutVx} from "./Vx/MainGridLayoutVx";
 const { ccclass, property } = _decorator;
 
 
@@ -56,10 +57,18 @@ export class MainView extends ViewBase {
         })
     }
 
+
     public showVx(): Promise<unknown> {
         return new Promise(res => {
             this.node.setPosition(new Vec3(0,0,0))
-            // todo 主界面的每一个GridItem 动效，外圈到内圈逐一显现，波动特效shader幅度由大到小
+            this.mainGemsLayout!.getComponent(MainGridLayoutVx)!.show()
+        })
+    }
+
+    public hideVx() {
+        return new Promise(res => {
+            this.node.setPosition(new Vec3(0,1300,0))
+            this.mainGemsLayout!.getComponent(MainGridLayoutVx)!.hide()
         })
     }
 

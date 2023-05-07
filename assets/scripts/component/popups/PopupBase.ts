@@ -63,7 +63,6 @@ export default class PopupBase<Options = any> extends Component {
                 })
             scaleTween.start()
             opacityTween.start()
-
         });
     }
 

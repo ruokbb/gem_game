@@ -17,7 +17,7 @@ export class GainsPopup extends PopupBase<GainsPopupOptions>{
      * 资源弹窗路径
      */
     public static get path() {
-        return 'prefabs/GainPopup';
+        return 'prefabs/gainsPopup';
     }
 
     clickConfirm(){

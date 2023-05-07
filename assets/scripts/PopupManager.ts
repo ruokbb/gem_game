@@ -1,5 +1,5 @@
 import PopupBase from "./component/popups/PopupBase";
-import {_decorator,find, resources, Node,instantiate,Canvas,macro,  Prefab, isValid, warn} from 'cc'
+import {_decorator,find, resources, Node,instantiate,UITransform,  Prefab, isValid, warn} from 'cc'
 import {Game} from "./Game";
 const { ccclass, property } = _decorator;
 
@@ -166,7 +166,7 @@ export default class PopupManager {
             // 添加到场景中
             node.setParent(this.container || find("Canvas"));
             // 显示在最上层
-            node.setSiblingIndex(1);
+            node.setSiblingIndex(100);
             // 设置完成回调
             const finishCallback = async (suspended: boolean) => {
                 if (suspended) {

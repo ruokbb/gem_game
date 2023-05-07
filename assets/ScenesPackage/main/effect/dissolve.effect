@@ -107,14 +107,14 @@ CCProgram sprite-fs %{
     float per_step_y = (1.0 / spriteHeight) * (bgColorRange / range);
 
     // 取样周边一定范围透明度
-    vec4 totalColor = new vec4(0,0,0,0);
+    vec4 totalColor = vec4(0,0,0,0);
     for (float x = -range; x <= range; x++) {
       for (float y = -range; y <= range; y++) {
         totalColor += getTextureColor(cc_spriteTexture, v_uv0 + vec2(x * per_step_x, y * per_step_y)); 
       }
     }
-    totalAlpha /= (range + range + 1.0) * (range + range + 1.0);
-    return totalAlpha;
+    totalColor /= (range + range + 1.0) * (range + range + 1.0);
+    return totalColor;
   }
   #endif
 
@@ -135,9 +135,9 @@ CCProgram sprite-fs %{
     if (noiseColor.r < threshold + melt){
       // 获取周围平均值
       vec4 meltColor = getBgColor();
-      float percent = clamp((threshold - noiseColor.r) / melt, 0.0, 1.0)
-      vec4 finalColor = mix(meltColor, o, percent)
-      return finalColor
+      float percent = clamp((threshold - noiseColor.r) / melt, 0.0, 1.0);
+      vec4 finalColor = mix(meltColor, o, percent);
+      return finalColor;
     }
     #endif
 

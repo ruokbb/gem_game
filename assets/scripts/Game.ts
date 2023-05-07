@@ -105,9 +105,12 @@ export class Game extends Component {
     calGain(showPopup = false){
         const result = calPlayerGainApi()
         if (showPopup){
+            let date = new Date(parseInt(getLastCalTime() as string))
+            console.log(getLastCalTime() as string)
+            let dateString = date.getFullYear() + "-" + (date.getMonth() < 10 ? "0" + (date.getMonth() + 1) : (date.getMonth()+1)) + "-" + (date.getDate() < 10 ? "0" + date.getDate(): date.getDate())
             const options: GainsPopupOptions = {
-                lastLoginTime: getLastCalTime() as string ,
-                gainCoinNumber: result[1] as number
+                lastLoginTime: dateString,
+                gainCoinNumber: Math.floor(result[1] as number)
             }
             const params : PopupParamsType = {
                 mode : PopupCacheMode.Once

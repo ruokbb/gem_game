@@ -67,7 +67,10 @@ CCProgram sprite-fs %{
     vec2 offect = vec2(0,0);
     offect.x = sin(v_uv0.x * 14.0) * dt;
     offect.y = sin(v_uv0.y * 14.0) * dt;
-    v_uv0 += offect;
+    vec2 final_uv = v_uv0 + offect;
+    o *= texture(cc_spriteTexture, final_uv);
+    o *= v_color;
+    return o;
     #endif
 
     o *= texture(cc_spriteTexture, v_uv0);

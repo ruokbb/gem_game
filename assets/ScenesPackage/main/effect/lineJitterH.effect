@@ -1,0 +1,101 @@
+// Copyright (c) 2017-2020 Xiamen Yaji Software Co., Ltd.
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: sprite-vs:vert
+      frag: sprite-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        alphaThreshold: { value: 0.5 }
+        frequency: {value: 0.1}
+        intensity: {value: 0.1}
+}%
+
+CCProgram sprite-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+
+  out vec4 v_color;
+  out vec2 v_uv0;
+
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+
+    pos = cc_matViewProj * pos;
+
+    v_uv0 = a_texCoord;
+
+    v_color = a_color;
+
+    return pos;
+  }
+}%
+
+CCProgram sprite-fs %{
+  precision highp float;
+  #include <alpha-test>
+  #include <builtin/uniforms/cc-global>
+
+  in vec4 v_color;
+  in vec2 v_uv0;
+  #pragma builtin(local)
+  layout(set = 2, binding = 11) uniform sampler2D cc_spriteTexture;
+
+  uniform jitter {
+        float frequency;
+        float intensity;
+  };
+
+  float randomNoise(float x, float y){
+    return fract(sin(dot(vec2(x, y), vec2(12.9898, 78.233))) * 43758.5453);
+  }
+
+  float step(float a, float x){
+    if (x < a){
+        return 0;
+    }else{
+        return 1;
+    }
+  }
+
+  vec4 horizontal(vec2 uv, float _intensity, float _frequency){
+    float amount = 0.005 + pow(_intensity, 3) * 0.1;
+    float threshold = clamp(1 - intensity * 1.2, 0.0, 1.0);
+    float strength = 0.5 + 0.5 * cos(cc_time.x * _frequency);
+    float jitter = randomNoise(uv.y, cc_time.x / 20) * 2 - 1;
+    jitter *= step(threshold, abs(jitter)) * amount * strength;
+    vec4 sceneColor = texture(cc_spriteTexture, fract(uv + vec2(jitter, 0)));
+  }
+
+  vec4 vertical(vec2 uv, float _intensity, float _frequency){
+    float amount = 0.005 + pow(_intensity, 3) * 0.1;
+    float threshold = clamp(1 - intensity * 1.2, 0.0, 1.0);
+    float strength = 0.5 + 0.5 * cos(cc_time.x * _frequency);
+    float jitter = randomNoise(uv.x, cc_time.x / 20) * 2 - 1;
+    jitter *= step(threshold, abs(jitter)) * amount * strength;
+    vec4 sceneColor = texture(cc_spriteTexture, fract(uv + vec2(0, jitter)));
+  }
+
+  vec4 frag () {
+
+    vec4 o = vec4(1, 1, 1, 1);
+    o *= horizontal(v_uv0, intensity, frequency);
+    ALPHA_TEST(o);
+    return o;
+  }
+}%

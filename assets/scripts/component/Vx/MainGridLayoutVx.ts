@@ -1,4 +1,5 @@
-import { _decorator, Component,tween,UIOpacity, Node, Label} from 'cc';
+import {_decorator, Component, tween, UIOpacity, Node, Label, resources, Material, Sprite, find} from 'cc';
+import {Game} from "../../Game";
 const { ccclass, property } = _decorator;
 
 @ccclass("MainGridLayoutVx")
@@ -15,6 +16,25 @@ export class MainGridLayoutVx extends Component{
     private VxObj = {
         value : 0
     }
+
+    protected start() {
+        // todo 每一个grid绑定material
+        this.node.children.forEach((gemMask: Node) => {
+            this.loadMaterial("material/lineJitterH", gemMask)
+        })
+    }
+
+    /**
+     * 加载，material
+     * @param resourcePath
+     * @param target
+     */
+    loadMaterial(resourcePath: string, target: Node){
+        resources.load( resourcePath, Material, (err, material) => {
+            target.getComponent(Sprite)!.customMaterial = material
+        })
+    }
+
 
     public show() {
         return new Promise(res => {
@@ -33,12 +53,16 @@ export class MainGridLayoutVx extends Component{
                     .to(this.animTime, {opacity:255})
                     .start()
                 // shader 波动
-                tween(this.VxObj)
+                const tmpVxObj = Object.assign({}, this.VxObj)
+                tween(tmpVxObj)
                     .delay((echelon - 1) * this.echelonInterval + this.shaderDelay)
                     .to(this.animTime,{value: 1}, {
                         // @ts-ignore
                         onUpdate(target: {value: Number}, ration){
                             // todo 控制shader变量
+                            const pass = gemMask.getComponent(Sprite)!.material!.passes[0]
+                            // pass.setUniform(pass.getHandle("outline_color"), color)
+                            // pass.setUniform(pass.getHandle("outline_width"), width)
                         }
 
                     })

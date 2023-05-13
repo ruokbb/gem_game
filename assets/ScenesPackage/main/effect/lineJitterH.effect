@@ -65,30 +65,32 @@ CCProgram sprite-fs %{
     return fract(sin(dot(vec2(x, y), vec2(12.9898, 78.233))) * 43758.5453);
   }
 
-  float step(float a, float x){
+  float localStep(float a, float x){
     if (x < a){
-        return 0;
+        return 0.0;
     }else{
-        return 1;
+        return 1.0;
     }
   }
 
   vec4 horizontal(vec2 uv, float _intensity, float _frequency){
-    float amount = 0.005 + pow(_intensity, 3) * 0.1;
-    float threshold = clamp(1 - intensity * 1.2, 0.0, 1.0);
+    float amount = 0.005 + pow(_intensity, 3.0) * 0.1;
+    float threshold = clamp(1.0 - intensity * 1.2, 0.0, 1.0);
     float strength = 0.5 + 0.5 * cos(cc_time.x * _frequency);
-    float jitter = randomNoise(uv.y, cc_time.x / 20) * 2 - 1;
+    float jitter = randomNoise(uv.y, cc_time.x / 20.0) * 2.0 - 1.0;
     jitter *= step(threshold, abs(jitter)) * amount * strength;
-    vec4 sceneColor = texture(cc_spriteTexture, fract(uv + vec2(jitter, 0)));
+    vec4 sceneColor = texture(cc_spriteTexture, fract(uv + vec2(jitter, 0.0)));
+    return sceneColor;
   }
 
   vec4 vertical(vec2 uv, float _intensity, float _frequency){
-    float amount = 0.005 + pow(_intensity, 3) * 0.1;
+    float amount = 0.005 + pow(_intensity, 3.0) * 0.1;
     float threshold = clamp(1 - intensity * 1.2, 0.0, 1.0);
     float strength = 0.5 + 0.5 * cos(cc_time.x * _frequency);
-    float jitter = randomNoise(uv.x, cc_time.x / 20) * 2 - 1;
+    float jitter = randomNoise(uv.x, cc_time.x / 20.0) * 2.0 - 1.0;
     jitter *= step(threshold, abs(jitter)) * amount * strength;
     vec4 sceneColor = texture(cc_spriteTexture, fract(uv + vec2(0, jitter)));
+    return sceneColor;
   }
 
   vec4 frag () {

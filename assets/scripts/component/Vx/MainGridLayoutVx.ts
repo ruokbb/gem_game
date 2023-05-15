@@ -1,5 +1,6 @@
 import {_decorator, Component, tween, UIOpacity, Node, Label, resources, Material, Sprite, find} from 'cc';
 import {Game} from "../../Game";
+import {bindNumericOr} from "../../../../../../../../Applications/CocosCreator/Creator/3.6.3/CocosCreator.app/Contents/Resources/resources/3d/engine/cocos/core/animation/marionette/parametric";
 const { ccclass, property } = _decorator;
 
 @ccclass("MainGridLayoutVx")
@@ -14,7 +15,7 @@ export class MainGridLayoutVx extends Component{
     private shaderDelay = 0
 
     private VxObj = {
-        value : 0
+        value : 1
     }
 
     protected start() {
@@ -56,13 +57,14 @@ export class MainGridLayoutVx extends Component{
                 const tmpVxObj = Object.assign({}, this.VxObj)
                 tween(tmpVxObj)
                     .delay((echelon - 1) * this.echelonInterval + this.shaderDelay)
-                    .to(this.animTime,{value: 1}, {
+                    .to(this.animTime,{value: 0}, {
                         // @ts-ignore
                         onUpdate(target: {value: Number}, ration){
                             // todo 控制shader变量
                             const pass = gemMask.getComponent(Sprite)!.material!.passes[0]
-                            // pass.setUniform(pass.getHandle("outline_color"), color)
-                            // pass.setUniform(pass.getHandle("outline_width"), width)
+                            const tmp = target.value as number
+                            pass.setUniform(pass.getHandle("frequency"), tmp)
+                            pass.setUniform(pass.getHandle("intensity"), tmp)
                         }
 
                     })
@@ -74,7 +76,7 @@ export class MainGridLayoutVx extends Component{
     public hide(){
         this.node.children.forEach((gemMask: Node) => {
             gemMask.getComponent(UIOpacity)!.opacity = 0
-            this.VxObj.value = 0
+            this.VxObj.value = 1
         })
     }
 
